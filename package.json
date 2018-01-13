@@ -1,19 +1,47 @@
 {
   "name": "rl-js-agents",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Reinforcement learning agents in JavaScript",
-  "author": "Chris Nota <cnota@cs.umass.edu>",
+  "homepage": "https://github.com/cpnota/rl-js-agents#readme",
   "license": "MIT",
+  "main": "index.js",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/cpnota/rl-js-agents/issues"
+  },
+  "dependencies": {},
   "devDependencies": {
-    "eslint": "^4.15.0",
-    "eslint-config-prettier": "^2.9.0",
-    "eslint-config-prettier-standard": "^1.0.1",
-    "eslint-config-standard": "^11.0.0-beta.0",
-    "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-node": "^5.2.1",
-    "eslint-plugin-prettier": "^2.4.0",
-    "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1",
-    "prettier": "^1.10.1"
+    "eslint": "4.15.0",
+    "eslint-config-prettier": "2.9.0",
+    "eslint-config-prettier-standard": "1.0.1",
+    "eslint-config-standard": "10.2.1",
+    "eslint-plugin-import": "2.8.0",
+    "eslint-plugin-mocha": "4.11.0",
+    "eslint-plugin-node": "5.2.1",
+    "eslint-plugin-prettier": "2.4.0",
+    "eslint-plugin-promise": "3.6.0",
+    "eslint-plugin-standard": "3.0.1",
+    "mocha": "4.1.0",
+    "nyc": "11.4.1",
+    "prettier": "1.10.2"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cpnota/rl-js-agents.git"
+  },
+  "scripts": {
+    "coverage": "nyc mocha # writes to .nyc_output and prints report to console",
+    "eslint": "eslint .*.js *.js **/*.js --report-unused-disable-directives",
+    "postreport": "npm run eslint -- --max-warnings 0 # what's the policy?",
+    "prereport": "npm run eslint -- --fix # runs prettier-standard",
+    "report": "npm run coverage # sandwiched between eslint calls",
+    "test": "npm run report # alternatively, use jest if you want"
   }
 }
