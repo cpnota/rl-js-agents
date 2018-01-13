@@ -16,5 +16,12 @@
     "eslint-plugin-standard": "^3.0.1",
     "jest": "^22.0.6",
     "prettier": "^1.10.1"
+  },
+  "scripts": {
+    "coverage": "jest --coverage",
+    "lint": "eslint .*.js *.js **/*.js",
+    "format": "npm run lint -- --fix",
+    "test": "jest",
+    "watch": "jest --watch"
   }
 }
