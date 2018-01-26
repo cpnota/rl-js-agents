@@ -14,12 +14,12 @@ module.exports = class Sarsa {
     this.environment.dispatch(this.action)
     this.nextState = this.environment.getState()
     this.nextAction = this.policy.chooseAction(this.nextState)
-    this.updateWeights()
+    this.updateQ()
     this.state = this.nextState
     this.action = this.nextAction
   }
 
-  updateWeights() {
+  updateQ() {
     const estimate = this.q.call(this.state, this.action)
     const nextEstimate = this.environment.isTerminated()
       ? 0
