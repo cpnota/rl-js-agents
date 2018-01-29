@@ -23,7 +23,7 @@ module.exports = class Sarsa {
     const estimate = this.q.call(this.state, this.action)
     const nextEstimate = this.environment.isTerminated()
       ? 0
-      : this.q.score(this.nextState, this.nextAction)
+      : this.q.call(this.nextState, this.nextAction)
     return (
       this.environment.getReward() +
       this.environment.gamma * nextEstimate -
