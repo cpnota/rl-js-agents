@@ -11,7 +11,7 @@ module.exports = class Sarsa {
   }
 
   act() {
-    this.environment.dispatch(this.action)
+    this.environment.dispatch(this.action())
     this.nextState = this.environment.getState()
     this.nextAction = this.policy.chooseAction(this.nextState)
     this.q.update(this.state, this.action, this.getTDError())
