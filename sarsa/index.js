@@ -11,7 +11,7 @@ module.exports = class Sarsa {
   }
 
   act() {
-    this.environment.dispatch(this.action())
+    this.environment.dispatch(this.action)
     this.nextState = this.environment.getState()
     this.nextAction = this.policy.chooseAction(this.nextState)
     this.q.update(this.state, this.action, this.getTDError())
@@ -20,10 +20,12 @@ module.exports = class Sarsa {
   }
 
   getTDError() {
-    const estimate = this.q.call(this.state, this.action)
     const nextEstimate = this.environment.isTerminated()
       ? 0
       : this.q.call(this.nextState, this.nextAction)
+
+    const estimate = this.q.call(this.state, this.action)
+
     return (
       this.environment.getReward() +
       this.environment.gamma * nextEstimate -
