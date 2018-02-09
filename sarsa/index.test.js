@@ -8,8 +8,8 @@ describe('sarsa', () => {
 
   const state1 = 'state1'
   const state2 = 'state2'
-  const action1 = () => 'action1'
-  const action2 = () => 'action2'
+  const action1 = 'action1'
+  const action2 = 'action2'
 
   beforeEach(() => {
     environment = {
@@ -57,7 +57,7 @@ describe('sarsa', () => {
 
   test('updates q according to the TD error', () => {
     agent.act()
-    expect(q.update).toBeCalledWith(state1, action1, 3)
+    expect(q.update).toBeCalledWith(state1, action1, 1.5)
   })
 
   test('dispatches the next action on second time step', () => {
@@ -71,7 +71,7 @@ describe('sarsa', () => {
     q.call.mockReturnValueOnce(10).mockReturnValueOnce(20)
     environment.getReward.mockReturnValueOnce(5)
     agent.act()
-    expect(q.update).lastCalledWith(state2, action2, 5)
+    expect(q.update).lastCalledWith(state2, action2, -10)
   })
 
   test('if environment is terminated, uses 0 as next estimate in TD error calculation', () => {
