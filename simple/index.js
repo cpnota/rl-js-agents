@@ -1,4 +1,4 @@
-module.exports = class Sarsa {
+module.exports = class Simple {
   constructor({ policy }) {
     this.policy = policy
   }
