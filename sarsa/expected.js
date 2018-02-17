@@ -36,11 +36,10 @@ module.exports = class ExpectedSarsa {
   }
 
   getExpected() {
-    const actions = Object.values(this.environment.actions)
     return math.sum(
-      ...actions.map(action => {
+      ...this.policy.actions.map(action => {
         const value = this.q.call(this.nextState, action)
-        const probability = this.q.probability(this.nextState, action)
+        const probability = this.policy.getProbability(this.nextState, action)
         return value * probability
       })
     )
