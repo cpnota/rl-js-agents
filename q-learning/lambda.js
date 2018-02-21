@@ -29,7 +29,7 @@ module.exports = class QLearning {
     if (bestAction === this.nextAction) {
       this.traces.decay(this.lambda * this.environment.gamma)
     } else {
-      this.traces = this.act.createTraces() // reset
+      this.traces = this.q.createTraces() // reset
     }
   }
 
