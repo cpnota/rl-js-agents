@@ -21,9 +21,9 @@ module.exports = class QLearning {
     const nextEstimate = this.environment.isTerminated()
       ? 0
       : this.q.call(
-        this.nextState,
-        this.policy.chooseBestAction(this.nextState)
-      )
+          this.nextState,
+          this.policy.chooseBestAction(this.nextState)
+        )
 
     const estimate = this.q.call(this.state, this.action)
 
