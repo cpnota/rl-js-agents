@@ -24,11 +24,13 @@ module.exports = class QLearning {
   update() {
     const bestAction = this.policy.chooseBestAction(this.nextState)
     const tdError = this.getTDError(bestAction)
-    this.traces.updateEligibility(this.state, this.action)
-    this.traces.updateQ(tdError)
-    if (bestAction === this.nextAction) {
-      this.traces.decay(this.lambda * this.environment.gamma)
-    } else {
+    this.traces.update({
+      state: this.state,
+      action: this.action,
+      tdError,
+      decayAmount: this.lambda * this.environment.gamma
+    })
+    if (bestAction !== this.nextAction) {
       this.traces = this.q.createTraces() // reset
     }
   }

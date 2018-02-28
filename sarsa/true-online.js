@@ -10,6 +10,7 @@ module.exports = class Sarsa {
     this.traces = this.q.createTraces()
     this.state = this.environment.getState()
     this.action = this.policy.chooseAction(this.state)
+    this.qOld = 0
   }
 
   act() {
@@ -22,25 +23,24 @@ module.exports = class Sarsa {
   }
 
   update() {
-    this.traces.update({
-      state: this.state,
-      action: this.action,
-      tdError: this.getTDError(),
-      decayAmount: this.lambda * this.environment.gamma
-    })
-  }
-
-  getTDError() {
-    const nextEstimate = this.environment.isTerminated()
+    const q = this.q.call(this.state, this.action)
+    const qNext = this.environment.isTerminated()
       ? 0
       : this.q.call(this.nextState, this.nextAction)
 
-    const estimate = this.q.call(this.state, this.action)
+    const tdError =
+      this.environment.getReward() + this.environment.gamma * qNext - q
+    const offset = q - this.qOld
+    const decayAmount = this.lambda * this.environment.gamma
 
-    return (
-      this.environment.getReward() +
-      this.environment.gamma * nextEstimate -
-      estimate
-    )
+    this.traces.trueOnlineUpdate({
+      state: this.state,
+      action: this.action,
+      tdError,
+      offset,
+      decayAmount
+    })
+
+    this.qOld = qNext
   }
 }
