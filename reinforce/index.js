@@ -1,8 +1,9 @@
 const math = require('mathjs')
 
 module.exports = class Reinforce {
-  constructor({ policy }) {
+  constructor({ policy, alphaBaseline }) {
     this.policy = policy
+    this.alphaBaseline = alphaBaseline
     this.baseline = 0
   }
 
@@ -23,12 +24,12 @@ module.exports = class Reinforce {
   }
 
   update() {
-    this.getReturns()
-      .map(r => r - this.baseline)
-      .forEach((error, time) => {
-        const { state, action } = this.history[time]
-        this.policy.update(state, action, error)
-      })
+    const returns = this.getReturns()
+    returns.map(r => r - this.baseline).forEach((error, time) => {
+      const { state, action } = this.history[time]
+      this.policy.update(state, action, error)
+    })
+    this.baseline += this.alphaBaseline * (math.mean(returns) - this.baseline)
   }
 
   getReturns() {

@@ -15,7 +15,7 @@ test('does the policy update', () => {
     update: jest.fn()
   }
 
-  const reinforce = new Reinforce({ policy })
+  const reinforce = new Reinforce({ policy, alphaBaseline: 2 })
 
   reinforce.environment = {
     gamma: 0.5
@@ -37,4 +37,6 @@ test('does the policy update', () => {
     [4, 4, 6],
     [8, 8, 6]
   ])
+
+  expect(reinforce.baseline).toEqual(11)
 })
