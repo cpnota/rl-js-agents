@@ -15,10 +15,12 @@ module.exports = class Reinforce {
   act() {
     const state = this.environment.getState()
     const action = this.policy.chooseAction(state)
+    this.environment.dispatch(action)
     const reward = this.environment.getReward()
     this.history.push({ state, action, reward })
 
     if (this.environment.isTerminated()) {
+      console.log('hello')
       this.update()
     }
   }
