@@ -20,7 +20,6 @@ module.exports = class Reinforce {
     this.history.push({ state, action, reward })
 
     if (this.environment.isTerminated()) {
-      console.log('hello')
       this.update()
     }
   }
