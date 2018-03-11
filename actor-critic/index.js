@@ -27,7 +27,7 @@ module.exports = class ActorCritic {
       this.environment.getReward() +
       this.environment.gamma * this.v.call(this.nextState) -
       this.v.call(this.state)
-    this.vTraces.updateV({
+    this.vTraces.update({
       state: this.state,
       tdError,
       decayAmount: this.lambda * this.environment.gamma
