@@ -1,3 +1,5 @@
+const math = require('mathjs')
+
 module.exports = class Sarsa {
   constructor({ q, policy }) {
     this.q = q
@@ -21,8 +23,17 @@ module.exports = class Sarsa {
 
   update() {
     const tdError = this.getTDError()
-    this.q.update(this.state, this.action, tdError)
-    // this.q.update(this.nextState, this.nextAction, -tdError)
+    const errors = math.multiply(
+      tdError,
+      math.subtract(
+        this.q.gradient(this.state, this.action),
+        math.multiply(
+          this.environment.gamma,
+          this.q.gradient(this.nextState, this.nextAction)
+        )
+      )
+    )
+    this.q.updateWeights(errors)
   }
 
   getTDError() {
