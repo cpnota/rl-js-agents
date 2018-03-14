@@ -1,9 +1,10 @@
 const math = require('mathjs')
 
 module.exports = class Sarsa {
-  constructor({ q, policy }) {
+  constructor({ q, policy, gamma = 1 }) {
     this.q = q
     this.policy = policy
+    this.gamma = gamma
   }
 
   newEpisode(environment) {
@@ -28,7 +29,7 @@ module.exports = class Sarsa {
       math.subtract(
         this.q.gradient(this.state, this.action),
         math.multiply(
-          this.environment.gamma,
+          this.getGamma(),
           this.q.gradient(this.nextState, this.nextAction)
         )
       )
@@ -44,9 +45,11 @@ module.exports = class Sarsa {
     const estimate = this.q.call(this.state, this.action)
 
     return (
-      this.environment.getReward() +
-      this.environment.gamma * nextEstimate -
-      estimate
+      this.environment.getReward() + this.getGamma() * nextEstimate - estimate
     )
+  }
+
+  getGamma() {
+    return this.environment.gamma * this.gamma
   }
 }
