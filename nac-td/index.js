@@ -2,12 +2,13 @@ const math = require('mathjs')
 
 /* eslint-disable camelcase */
 module.exports = class NAC_TD {
-  constructor({ policy, v, alpha_w, update_frequency }) {
+  constructor({ policy, v, alpha_w, update_frequency, lambda }) {
     this.v = v
     this.policy = policy
     this.alpha_w = alpha_w
     this.count = 0
     this.update_frequency = update_frequency
+    this.lambda = lambda
   }
 
   newEpisode(environment) {
@@ -31,6 +32,9 @@ module.exports = class NAC_TD {
     if (this.e_w === undefined) {
       // TODO this hack is horrific
       this.e_w = this.policy.partialLN(this.state, this.action).fill(0)
+      if (this.w === undefined) {
+        this.w = this.e_w.map(() => 0)
+      }
     }
   }
 
@@ -75,8 +79,8 @@ module.exports = class NAC_TD {
     const reward = this.environment.getReward()
     const nextValue = this.environment.isTerminated()
       ? 0
-      : this.v.score(this.nextState)
-    const previousValue = this.v.score(this.state)
+      : this.v.call(this.nextState)
+    const previousValue = this.v.call(this.state)
     return reward + this.getGamma() * nextValue - previousValue
   }
 }
