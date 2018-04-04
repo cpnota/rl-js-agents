@@ -2,15 +2,18 @@ const math = require('mathjs')
 
 /* eslint-disable camelcase */
 module.exports = class NAC_TD {
-  constructor({ policy, v, alpha_w }) {
+  constructor({ policy, v, alpha_w, update_frequency }) {
     this.v = v
     this.policy = policy
     this.alpha_w = alpha_w
+    this.count = 0
+    this.update_frequency = update_frequency
   }
 
   newEpisode(environment) {
     this.environment = environment
     this.vTraces = this.v.createTraces()
+    this.e_w = undefined // TODO remove this hack
   }
 
   act() {
@@ -24,6 +27,11 @@ module.exports = class NAC_TD {
     this.action = this.policy.chooseAction(this.state)
     this.environment.dispatch(this.action)
     this.nextState = this.environment.getState()
+
+    if (this.e_w === undefined) {
+      // TODO this hack is horrific
+      this.e_w = this.policy.partialLN(this.state, this.action).fill(0)
+    }
   }
 
   updateCritic() {
@@ -31,7 +39,7 @@ module.exports = class NAC_TD {
     const gradient = this.policy.partialLN(this.state, this.action)
 
     this.e_w = math.add(
-      math.multiply(this.gamma, this.gamma, this.e_w),
+      math.multiply(this.getGamma(), this.lambda, this.e_w),
       gradient
     )
 
@@ -46,13 +54,17 @@ module.exports = class NAC_TD {
     this.vTraces.update({
       state: this.state,
       tdError,
-      decayAmount: this.lambda * this.environment.gamma
+      decayAmount: this.lambda * this.getGamma()
     })
   }
 
   updateActor() {
-    const norm = math.norm(this.w)
-    this.policy.updateWeights(math.multiply(this.w, 1 / norm))
+    this.count = this.count + 1
+    if (this.count === this.update_frequency) {
+      const norm = math.norm(this.w)
+      this.policy.updateWeights(math.multiply(this.w, 1 / norm))
+      this.count = 0
+    }
   }
 
   getGamma() {
