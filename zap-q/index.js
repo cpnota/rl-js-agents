@@ -1,5 +1,5 @@
 const math = require('mathjs')
-const product = require('./vector-product')
+const { outer, pinv } = require('./lin')
 
 /* TODO eligibility traces */
 /* eslint-disable camelcase */
@@ -18,9 +18,7 @@ module.exports = class QLearning {
     this.state = this.environment.getState()
     this.features = this.basis.features(this.state)
     this.traces = this.features
-    this.A = math
-      .zeros(this.basis.terms, this.basis.terms)
-      .map(() => 0.01 * (Math.random() - 0.5))
+    this.A = math.zeros(this.basis.terms, this.basis.terms)._data
   }
 
   act() {
@@ -39,12 +37,12 @@ module.exports = class QLearning {
       math.multiply(this.getBeta(), this.nextFeatures),
       this.features
     )
-    const A = product(this.traces, diff)
+    const A = outer(this.traces, diff)
     this.A = math.add(
       this.A,
       math.multiply(this.alpha_gain, math.subtract(A, this.A))
     )
-    const errors = math.multiply(math.inv(this.A), this.traces, tdError)
+    const errors = math.multiply(pinv(this.A), this.traces, -tdError)
     this.q.getApproximator(this.action).updateWeights(errors)
     this.traces = math.multiply(this.lambda, this.getBeta(), this.traces)
     this.traces = math.add(this.traces, this.nextFeatures)
