@@ -16,25 +16,30 @@ module.exports = class QLearning {
   newEpisode(environment) {
     this.environment = environment
     this.state = this.environment.getState()
-    this.features = this.basis.features(this.state)
-    this.traces = this.features
-    this.A = math.zeros(this.basis.terms, this.basis.terms)._data
+    this.traces = undefined
+    this.A = undefined
   }
 
   act() {
     this.action = this.policy.chooseAction(this.state)
+    this.features = this.q.features(this.state, this.action)
+    this.traces = this.traces
+      ? math.add(this.traces, this.features)
+      : this.features
+    this.A = this.A || math.zeros(this.traces.length, this.traces.length)._data
     this.environment.dispatch(this.action)
     this.nextState = this.environment.getState()
-    this.nextFeatures = this.basis.features(this.nextState)
     this.update()
     this.state = this.nextState
-    this.features = this.nextFeatures
   }
 
   update() {
-    const tdError = this.getTDError()
+    const bestAction = this.policy.chooseBestAction(this.nextState)
+    const tdError = this.getTDError(bestAction)
+    const nextFeatures = this.q.features(this.nextState, bestAction)
+
     const diff = math.subtract(
-      math.multiply(this.getBeta(), this.nextFeatures),
+      math.multiply(this.getBeta(), nextFeatures),
       this.features
     )
     const A = outer(this.traces, diff)
@@ -43,18 +48,14 @@ module.exports = class QLearning {
       math.multiply(this.alpha_gain, math.subtract(A, this.A))
     )
     const errors = math.multiply(pinv(this.A), this.traces, -tdError)
-    this.q.getApproximator(this.action).updateWeights(errors)
+    this.q.updateWeights(errors)
     this.traces = math.multiply(this.lambda, this.getBeta(), this.traces)
-    this.traces = math.add(this.traces, this.nextFeatures)
   }
 
-  getTDError() {
+  getTDError(bestAction) {
     const nextEstimate = this.environment.isTerminated()
       ? 0
-      : this.q.call(
-          this.nextState,
-          this.policy.chooseBestAction(this.nextState)
-        )
+      : this.q.call(this.nextState, bestAction)
 
     const estimate = this.q.call(this.state, this.action)
 
