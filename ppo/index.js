@@ -27,9 +27,9 @@ module.exports = class TrustRegionPolicyOptimization {
   update() {
     const returns = this.getReturns()
     const baselines = this.getBaselines()
-    const errors = returns.map((r, i) => r - baselines[i])
-    this.updateBaselines(errors)
-    const policyGradient = this.policyGradient(errors)
+    const advantages = returns.map((r, i) => r - baselines[i])
+    this.updateBaselines(advantages)
+    const policyGradients = this.policyGradient(advantages)
   }
 
   getReturns() {
