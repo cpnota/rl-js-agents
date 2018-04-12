@@ -4,12 +4,12 @@ const { outer, pinv } = require('./lin')
 /* TODO eligibility traces */
 /* eslint-disable camelcase */
 module.exports = class QLearning {
-  constructor({ q, policy, basis, gamma = 1, alpha_gain, lambda }) {
+  constructor({ q, policy, basis, gamma = 1, gain, lambda }) {
     this.q = q
     this.policy = policy
     this.basis = basis
     this.gamma = gamma
-    this.alpha_gain = alpha_gain
+    this.gain = gain
     this.lambda = lambda
   }
 
@@ -45,9 +45,11 @@ module.exports = class QLearning {
     const A = outer(this.traces, diff)
     this.A = math.add(
       this.A,
-      math.multiply(this.alpha_gain, math.subtract(A, this.A))
+      math.multiply(this.gain, math.subtract(A, this.A))
     )
-    const errors = math.multiply(pinv(this.A), this.traces, -tdError)
+    // const bias = math.multiply(0.001, math.eye(A.length))._data // TODO remove magic number
+    const A_inv = pinv(A)
+    const errors = math.multiply(A_inv, this.traces, -tdError)
     this.q.updateWeights(errors)
     this.traces = math.multiply(this.lambda, this.getBeta(), this.traces)
   }
