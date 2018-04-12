@@ -23,10 +23,7 @@ module.exports = class ActorCritic {
   }
 
   update() {
-    const tdError =
-      this.environment.getReward() +
-      this.environment.gamma * this.v.call(this.nextState) -
-      this.v.call(this.state)
+    const tdError = this.getTdError()
     this.vTraces.update({
       state: this.state,
       tdError,
@@ -38,5 +35,12 @@ module.exports = class ActorCritic {
       tdError,
       decayAmount: this.lambda * this.environment.gamma
     })
+  }
+
+  getTdError() {
+    const nextEstimate = this.environment.isTerminated()
+      ? 0
+      : this.environment.gamma * this.v.call(this.nextState)
+    return this.environment.getReward() + nextEstimate - this.v.call(this.state)
   }
 }
