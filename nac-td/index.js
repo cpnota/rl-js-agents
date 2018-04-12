@@ -30,7 +30,7 @@ module.exports = class NAC_TD {
     this.nextState = this.environment.getState()
 
     if (this.e_w === undefined) {
-      // TODO this hack is horrific
+      // TODO this is an ugly way to initialize this
       this.e_w = this.policy.partialLN(this.state, this.action).fill(0)
       if (this.w === undefined) {
         this.w = this.e_w.map(() => 0)

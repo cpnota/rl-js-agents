@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2"
+    "lodash.set": "^4.3.2",
+    "ml-matrix": "^5.0.1"
   }
 }
