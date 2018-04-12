@@ -20,11 +20,15 @@ module.exports = class ActorCritic {
   }
 
   update() {
-    const tdError =
-      this.environment.getReward() +
-      this.environment.gamma * this.v.call(this.nextState) -
-      this.v.call(this.state)
+    const tdError = this.getTdError()
     this.v.update(this.state, this.I * tdError)
     this.policy.update(this.state, this.action, this.I * tdError)
+  }
+
+  getTdError() {
+    const nextEstimate = this.environment.isTerminated()
+      ? 0
+      : this.environment.gamma * this.v.call(this.nextState)
+    return this.environment.getReward() + nextEstimate - this.v.call(this.state)
   }
 }
