@@ -2,10 +2,11 @@ const math = require('mathjs')
 
 // FIXME right now this is just REINFORCE with baselines
 module.exports = class ProximalPolicyOptimization {
-  constructor({ policy, v, epochs }) {
+  constructor({ policy, v, epochs, epsilon }) {
     this.policy = policy
     this.v = v
     this.epochs = epochs
+    this.epsilon = epsilon
   }
 
   newEpisode(environment) {
@@ -94,9 +95,8 @@ module.exports = class ProximalPolicyOptimization {
         )
   }
 
-  shouldClip() {
-    // TODO
-    return false
+  shouldClip(importanceWeight) {
+    return Math.abs(1 - importanceWeight) >= this.epsilon
   }
 
   computeReturns() {
