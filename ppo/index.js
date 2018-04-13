@@ -56,11 +56,21 @@ module.exports = class ProximalPolicyOptimization {
   computeAdvantages() {
     this.computeBaselines()
     this.computeReturns()
-    // this.computeTdErrors()
+    this.computeTdErrors()
 
+    const discountRate = this.getGamma() * this.getLambda()
+
+    // TODO optimize this loop
+    // it should be able to do this faster than n ** 2
     for (const t in this.history) {
       const step = this.history[t]
-      step.advantage = step.return - step.baseline
+      const rest = this.history.slice(t)
+      let advantage = 0
+      for (const x in rest) {
+        const { tdError = 0 } = rest[x]
+        advantage += tdError * discountRate ** (x - t)
+      }
+      step.advantage = advantage
     }
   }
 
@@ -104,12 +114,15 @@ module.exports = class ProximalPolicyOptimization {
 
   computeTdErrors() {
     this.history.forEach((step, t) => {
-      const { reward, baseline } = step
-      const { baseline: next } = this.history[t + 1] || { baseline: 0 }
-      if (baseline === 0) return // cannot compute tdError for last time step
-      const tdError =
-        reward + this.getGamma() * this.getLambda() * next - baseline
-      step.tdError = tdError
+      const { state, reward, terminal } = step
+      const estimate = this.v.call(state)
+
+      if (!terminal && !this.history[t + 1]) {
+        return // cannot compute tdError
+      }
+
+      const nextEstimate = terminal ? 0 : this.v.call(this.history[t + 1].state)
+      step.tdError = reward + this.getGamma() * nextEstimate - estimate
     })
   }
 

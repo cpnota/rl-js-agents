@@ -30,7 +30,8 @@ test('computes advantages', () => {
   })
   agent.history = [1, 2, 3].map(state => ({
     state,
-    reward: state
+    reward: state,
+    terminal: state === 3
   }))
   agent.computeAdvantages()
   expect(agent.history.map(({ advantage }) => advantage)).toEqual([4, 1, -3])
