@@ -5,7 +5,8 @@ test('gets returns', () => {
   agent.history = [1, 2, 3].map(reward => ({
     reward
   }))
-  expect(agent.getReturns()).toEqual([6, 5, 3])
+  agent.computeReturns()
+  expect(agent.history.map(({ return: r }) => r)).toEqual([6, 5, 3])
 })
 
 test('gets baselines', () => {
@@ -17,19 +18,20 @@ test('gets baselines', () => {
   agent.history = [1, 2, 3].map(state => ({
     state
   }))
-  expect(agent.getBaselines()).toEqual([2, 4, 6])
+  agent.computeBaselines()
+  expect(agent.history.map(({ baseline }) => baseline)).toEqual([2, 4, 6])
 })
 
-test('computes policy gradient', () => {
+test('computes advantages', () => {
   const agent = new TRPO({
-    policy: {
-      partialLN: (state, action) => [state, action]
+    v: {
+      call: state => state * 2
     }
   })
-  const errors = [1, 0, -1]
   agent.history = [1, 2, 3].map(state => ({
     state,
-    action: state / 2
+    reward: state
   }))
-  expect(agent.policyGradient(errors)).toEqual([-2, -1])
+  agent.computeAdvantages()
+  expect(agent.history.map(({ advantage }) => advantage)).toEqual([4, 1, -3])
 })

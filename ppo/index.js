@@ -1,6 +1,7 @@
 const math = require('mathjs')
 
-module.exports = class TrustRegionPolicyOptimization {
+// FIXME right now this is just REINFORCE with baselines
+module.exports = class ProximalPolicyOptimization {
   constructor({ policy, v }) {
     this.policy = policy
     this.v = v
@@ -14,29 +15,90 @@ module.exports = class TrustRegionPolicyOptimization {
   act() {
     const state = this.environment.getState()
     const action = this.policy.chooseAction(state)
-    const actionProbabilities = this.policy.getProbabilities(state)
+    const actionProbability = this.policy.getProbability(state)
     this.environment.dispatch(action)
     const reward = this.environment.getReward()
-    this.history.push({ state, action, reward, actionProbabilities })
+    this.history.push({ state, action, reward, actionProbability })
 
-    if (this.environment.isTerminated()) {
+    if (this.shouldUpdate()) {
       this.update()
     }
   }
 
-  update() {
-    const returns = this.getReturns()
-    const baselines = this.getBaselines()
-    const advantages = returns.map((r, i) => r - baselines[i])
-    this.updateBaselines(advantages)
-    const policyGradients = this.policyGradient(advantages)
+  shouldUpdate() {
+    // TODO real criteria
+    return this.environment.isTerminated()
   }
 
-  getReturns() {
+  update() {
+    this.updateValueFunction()
+    this.computeAdvantages()
+    this.optimizePolicy()
+  }
+
+  updateValueFunction() {
+    this.history(({ state, reward }, t) => {
+      const estimate = this.v.call(state)
+
+      const nextEstimate = this.history[t + 1]
+        ? this.v.call(this.history[t + 1].state)
+        : 0
+
+      const tdError = reward + this.getGamma() * nextEstimate - estimate
+
+      this.v.update(state, tdError)
+    })
+  }
+
+  computeAdvantages() {
+    this.computeReturns()
+    this.computeBaselines()
+
+    for (const step of this.history) {
+      step.advantage = step.return - step.baseline
+    }
+  }
+
+  optimizePolicy() {
+    let gradient = 0
+
+    for (const step of this.history) {
+      gradient = math.add(gradient, this.getSampleGradient(step))
+    }
+
+    if (gradient !== 0) {
+      const updateDirection = math.multiply(gradient, 1 / math.norm(gradient))
+      this.policy.updateWeights(updateDirection)
+    }
+  }
+
+  getSampleGradient({ state, action, advantage, actionProbability }) {
+    const importanceWeight =
+      this.policy.getProbability(state, action) / actionProbability
+
+    return this.shouldClip(importanceWeight)
+      ? 0
+      : math.multiply(
+          this.policy.partial(state, action),
+          1 / actionProbability,
+          advantage
+        )
+  }
+
+  shouldClip() {
+    // TODO
+    return false
+  }
+
+  computeReturns() {
     const rewards = this.history.map(({ reward }) => reward)
-    return rewards.map((reward, index) =>
-      this.getDiscountedReturn(rewards.slice(index))
-    )
+    rewards.forEach((reward, t) => {
+      this.history[t].return = this.getDiscountedReturn(rewards.slice(t))
+    })
+  }
+
+  getBatches() {
+    // TODO
   }
 
   getDiscountedReturn(rewards) {
@@ -46,19 +108,12 @@ module.exports = class TrustRegionPolicyOptimization {
     return math.add(0, ...discountedRewards) // mathjs gets mad if you only pass one value
   }
 
-  getBaselines() {
-    return this.history.map(({ state }) => this.v.call(state))
+  computeBaselines() {
+    this.history.forEach(step => (step.baseline = this.v.call(step.state)))
   }
 
   updateBaselines(errors) {
     this.history.forEach(({ state }, i) => this.v.update(state, errors[i]))
-  }
-
-  policyGradient(errors) {
-    const gradients = this.history.map(({ state, action }, i) =>
-      math.multiply(this.policy.partialLN(state, action), errors[i])
-    )
-    return math.add(...gradients)
   }
 
   getGamma() {
