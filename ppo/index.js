@@ -15,7 +15,7 @@ module.exports = class ProximalPolicyOptimization {
   act() {
     const state = this.environment.getState()
     const action = this.policy.chooseAction(state)
-    const actionProbability = this.policy.getProbability(state)
+    const actionProbability = this.policy.getProbability(state, action)
     this.environment.dispatch(action)
     const reward = this.environment.getReward()
     this.history.push({ state, action, reward, actionProbability })
@@ -37,7 +37,7 @@ module.exports = class ProximalPolicyOptimization {
   }
 
   updateValueFunction() {
-    this.history(({ state, reward }, t) => {
+    this.history.forEach(({ state, reward }, t) => {
       const estimate = this.v.call(state)
 
       const nextEstimate = this.history[t + 1]
