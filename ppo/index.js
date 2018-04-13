@@ -2,9 +2,10 @@ const math = require('mathjs')
 
 // FIXME right now this is just REINFORCE with baselines
 module.exports = class ProximalPolicyOptimization {
-  constructor({ policy, v }) {
+  constructor({ policy, v, epochs }) {
     this.policy = policy
     this.v = v
+    this.epochs = epochs
   }
 
   newEpisode(environment) {
@@ -60,15 +61,23 @@ module.exports = class ProximalPolicyOptimization {
   }
 
   optimizePolicy() {
-    let gradient = 0
+    for (let epochs = 0; epochs < this.epochs; epochs++) {
+      let gradient = 0
 
-    for (const step of this.history) {
-      gradient = math.add(gradient, this.getSampleGradient(step))
-    }
+      for (const step of this.history) {
+        gradient = math.add(gradient, this.getSampleGradient(step))
+      }
 
-    if (gradient !== 0) {
-      const updateDirection = math.multiply(gradient, 1 / math.norm(gradient))
-      this.policy.updateWeights(updateDirection)
+      if (gradient === 0) {
+        // we've either completely converged,
+        // or there was some error.
+        return
+      }
+
+      if (gradient !== 0) {
+        const updateDirection = math.multiply(gradient, 1 / math.norm(gradient))
+        this.policy.updateWeights(updateDirection)
+      }
     }
   }
 
