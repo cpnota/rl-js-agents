@@ -20,7 +20,8 @@ module.exports = class ProximalPolicyOptimization {
     const actionProbability = this.policy.getProbability(state, action)
     this.environment.dispatch(action)
     const reward = this.environment.getReward()
-    this.history.push({ state, action, reward, actionProbability })
+    const terminal = this.environment.isTerminated()
+    this.history.push({ state, action, reward, actionProbability, terminal })
 
     if (this.shouldUpdate()) {
       this.update()
@@ -39,24 +40,26 @@ module.exports = class ProximalPolicyOptimization {
   }
 
   updateValueFunction() {
-    this.history.forEach(({ state, reward }, t) => {
+    this.history.forEach(({ state, reward, terminal }, t) => {
       const estimate = this.v.call(state)
 
-      const nextEstimate = this.history[t + 1]
-        ? this.v.call(this.history[t + 1].state)
-        : 0
+      if (!terminal && !this.history[t + 1]) {
+        return // cannot compute tdError
+      }
 
+      const nextEstimate = terminal ? 0 : this.v.call(this.history[t + 1].state)
       const tdError = reward + this.getGamma() * nextEstimate - estimate
-
       this.v.update(state, tdError)
     })
   }
 
   computeAdvantages() {
-    this.computeReturns()
     this.computeBaselines()
+    this.computeReturns()
+    // this.computeTdErrors()
 
-    for (const step of this.history) {
+    for (const t in this.history) {
+      const step = this.history[t]
       step.advantage = step.return - step.baseline
     }
   }
@@ -99,6 +102,17 @@ module.exports = class ProximalPolicyOptimization {
     return Math.abs(1 - importanceWeight) >= this.epsilon
   }
 
+  computeTdErrors() {
+    this.history.forEach((step, t) => {
+      const { reward, baseline } = step
+      const { baseline: next } = this.history[t + 1] || { baseline: 0 }
+      if (baseline === 0) return // cannot compute tdError for last time step
+      const tdError =
+        reward + this.getGamma() * this.getLambda() * next - baseline
+      step.tdError = tdError
+    })
+  }
+
   computeReturns() {
     const rewards = this.history.map(({ reward }) => reward)
     rewards.forEach((reward, t) => {
@@ -126,6 +140,10 @@ module.exports = class ProximalPolicyOptimization {
   }
 
   getGamma() {
+    return 1
+  }
+
+  getLambda() {
     return 1
   }
 }
