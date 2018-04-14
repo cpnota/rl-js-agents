@@ -1,18 +1,25 @@
 const math = require('mathjs')
 
 // TODO:
-// Much better performance on CartPole was achieved with 
+// Much better performance on CartPole was achieved with
 // a once-per-episode update strategy
 // with no mini-batches.
 // The update strategy as well as the SGD
 // algorithms should be strategies
 module.exports = class ProximalPolicyOptimization {
-  constructor({ policy, v, epochs, epsilon, batchSize, miniBatchSize = 50 }) {
+  constructor({
+    policy,
+    v,
+    epochs,
+    epsilon,
+    batchStrategy,
+    miniBatchSize = 50
+  }) {
     this.policy = policy
     this.v = v
     this.epochs = epochs
     this.epsilon = epsilon
-    this.batchSize = batchSize
+    this.batchStrategy = batchStrategy
     this.miniBatchSize = miniBatchSize
     this.history = []
   }
@@ -30,14 +37,10 @@ module.exports = class ProximalPolicyOptimization {
     const terminal = this.environment.isTerminated()
     this.history.push({ state, action, reward, actionProbability, terminal })
 
-    if (this.shouldUpdate()) {
+    if (this.batchStrategy.shouldUpdate(this.history)) {
       this.update()
       this.history = []
     }
-  }
-
-  shouldUpdate() {
-    return this.history.length >= this.batchSize
   }
 
   update() {
@@ -84,7 +87,7 @@ module.exports = class ProximalPolicyOptimization {
   optimizePolicy() {
     let count = 0
     let stepIndex = 0
-    while (count < this.batchSize * this.epochs) {
+    while (count < this.history.length * this.epochs) {
       let gradient = 0
       for (let i = 0; i < this.miniBatchSize; i++) {
         const step = this.history[stepIndex]
