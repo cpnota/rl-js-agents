@@ -1,27 +1,14 @@
 const math = require('mathjs')
+const MiniBatchSGD = require('./optimize/minibatch-sgd')
 
-// TODO:
-// Much better performance on CartPole was achieved with
-// a once-per-episode update strategy
-// with no mini-batches.
-// The update strategy as well as the SGD
-// algorithms should be strategies
 module.exports = class ProximalPolicyOptimization {
-  constructor({
-    policy,
-    v,
-    epochs,
-    epsilon,
-    batchStrategy,
-    miniBatchSize = 50
-  }) {
+  constructor({ policy, v, epsilon, batchStrategy, optimizer }) {
     this.policy = policy
     this.v = v
-    this.epochs = epochs
     this.epsilon = epsilon
     this.batchStrategy = batchStrategy
-    this.miniBatchSize = miniBatchSize
     this.history = []
+    this.optimizer = optimizer
   }
 
   newEpisode(environment) {
@@ -65,7 +52,6 @@ module.exports = class ProximalPolicyOptimization {
 
   computeAdvantages() {
     this.computeBaselines()
-    this.computeReturns()
     this.computeTdErrors()
 
     const discountRate = this.getGamma() * this.getLambda()
@@ -85,25 +71,14 @@ module.exports = class ProximalPolicyOptimization {
   }
 
   optimizePolicy() {
-    let count = 0
-    let stepIndex = 0
-    while (count < this.history.length * this.epochs) {
-      let gradient = 0
-      for (let i = 0; i < this.miniBatchSize; i++) {
-        const step = this.history[stepIndex]
-        gradient = math.add(gradient, this.getSampleGradient(step))
-        count += 1
-        stepIndex += 1
-        if (!this.history[stepIndex]) stepIndex = 0
-      }
-      if (gradient === 0) {
-        // we've either completely converged,
-        // or there was some error.
-        return
-      }
-      const updateDirection = math.multiply(gradient, 1 / math.norm(gradient))
-      this.policy.updateWeights(updateDirection)
-    }
+    const samples = this.history
+    const computeGradient = sample => this.getSampleGradient(sample)
+    const update = direction => this.policy.updateWeights(direction)
+    this.optimizer.optimize({
+      samples,
+      computeGradient,
+      update
+    })
   }
 
   getSampleGradient({ state, action, advantage, actionProbability }) {
@@ -142,10 +117,6 @@ module.exports = class ProximalPolicyOptimization {
     rewards.forEach((reward, t) => {
       this.history[t].return = this.getDiscountedReturn(rewards.slice(t))
     })
-  }
-
-  getBatches() {
-    // TODO
   }
 
   getDiscountedReturn(rewards) {
