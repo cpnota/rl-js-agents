@@ -1,17 +1,24 @@
 const math = require('mathjs')
 
-// FIXME right now this is just REINFORCE with baselines
+// TODO:
+// Much better performance on CartPole was achieved with 
+// a once-per-episode update strategy
+// with no mini-batches.
+// The update strategy as well as the SGD
+// algorithms should be strategies
 module.exports = class ProximalPolicyOptimization {
-  constructor({ policy, v, epochs, epsilon }) {
+  constructor({ policy, v, epochs, epsilon, batchSize, miniBatchSize = 50 }) {
     this.policy = policy
     this.v = v
     this.epochs = epochs
     this.epsilon = epsilon
+    this.batchSize = batchSize
+    this.miniBatchSize = miniBatchSize
+    this.history = []
   }
 
   newEpisode(environment) {
     this.environment = environment
-    this.history = []
   }
 
   act() {
@@ -25,12 +32,12 @@ module.exports = class ProximalPolicyOptimization {
 
     if (this.shouldUpdate()) {
       this.update()
+      this.history = []
     }
   }
 
   shouldUpdate() {
-    // TODO real criteria
-    return this.environment.isTerminated()
+    return this.history.length >= this.batchSize
   }
 
   update() {
@@ -75,23 +82,24 @@ module.exports = class ProximalPolicyOptimization {
   }
 
   optimizePolicy() {
-    for (let epochs = 0; epochs < this.epochs; epochs++) {
+    let count = 0
+    let stepIndex = 0
+    while (count < this.batchSize * this.epochs) {
       let gradient = 0
-
-      for (const step of this.history) {
+      for (let i = 0; i < this.miniBatchSize; i++) {
+        const step = this.history[stepIndex]
         gradient = math.add(gradient, this.getSampleGradient(step))
+        count += 1
+        stepIndex += 1
+        if (!this.history[stepIndex]) stepIndex = 0
       }
-
       if (gradient === 0) {
         // we've either completely converged,
         // or there was some error.
         return
       }
-
-      if (gradient !== 0) {
-        const updateDirection = math.multiply(gradient, 1 / math.norm(gradient))
-        this.policy.updateWeights(updateDirection)
-      }
+      const updateDirection = math.multiply(gradient, 1 / math.norm(gradient))
+      this.policy.updateWeights(updateDirection)
     }
   }
 
