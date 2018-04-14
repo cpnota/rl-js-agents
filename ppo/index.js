@@ -1,5 +1,4 @@
 const math = require('mathjs')
-const MiniBatchSGD = require('./optimize/minibatch-sgd')
 
 module.exports = class ProximalPolicyOptimization {
   constructor({ policy, v, epsilon, batchStrategy, optimizer }) {
