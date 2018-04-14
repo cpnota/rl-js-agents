@@ -1,14 +1,5 @@
 const TRPO = require('./')
 
-test('gets returns', () => {
-  const agent = new TRPO({})
-  agent.history = [1, 2, 3].map(reward => ({
-    reward
-  }))
-  agent.computeReturns()
-  expect(agent.history.map(({ return: r }) => r)).toEqual([6, 5, 3])
-})
-
 test('gets baselines', () => {
   const agent = new TRPO({
     v: {

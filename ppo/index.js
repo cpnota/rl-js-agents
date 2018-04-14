@@ -55,17 +55,19 @@ module.exports = class ProximalPolicyOptimization {
 
     const discountRate = this.getGamma() * this.getLambda()
 
-    // TODO optimize this loop
-    // it should be able to do this faster than n ** 2
+    // compute the advantage from the initial state
+    // and then use this computation to iteratively
+    // compute the computation for the rest of the states.
+    // This is 2n instead of n^2
+    let advantage = 0
     for (const t in this.history) {
-      const step = this.history[t]
-      const rest = this.history.slice(t)
-      let advantage = 0
-      for (const x in rest) {
-        const { tdError = 0 } = rest[x]
-        advantage += tdError * discountRate ** (x - t)
-      }
+      const { tdError = 0 } = this.history[t]
+      advantage += tdError * discountRate ** t
+    }
+
+    for (const step of this.history) {
       step.advantage = advantage
+      advantage = (advantage - step.tdError) ** (1 / discountRate)
     }
   }
 
