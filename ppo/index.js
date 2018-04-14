@@ -81,21 +81,12 @@ module.exports = class ProximalPolicyOptimization {
     })
   }
 
-  getSampleGradient({ state, action, advantage, actionProbability }) {
-    const importanceWeight =
-      this.policy.getProbability(state, action) / actionProbability
-
-    return this.shouldClip(importanceWeight)
-      ? 0
-      : math.multiply(
-          this.policy.partial(state, action),
-          1 / actionProbability,
-          advantage
-        )
+  computeBaselines() {
+    this.history.forEach(step => (step.baseline = this.v.call(step.state)))
   }
 
-  shouldClip(importanceWeight) {
-    return Math.abs(1 - importanceWeight) >= this.epsilon
+  updateBaselines(errors) {
+    this.history.forEach(({ state }, i) => this.v.update(state, errors[i]))
   }
 
   computeTdErrors() {
@@ -112,26 +103,21 @@ module.exports = class ProximalPolicyOptimization {
     })
   }
 
-  computeReturns() {
-    const rewards = this.history.map(({ reward }) => reward)
-    rewards.forEach((reward, t) => {
-      this.history[t].return = this.getDiscountedReturn(rewards.slice(t))
-    })
+  getSampleGradient({ state, action, advantage, actionProbability }) {
+    const importanceWeight =
+      this.policy.getProbability(state, action) / actionProbability
+
+    return this.shouldClip(importanceWeight)
+      ? 0
+      : math.multiply(
+          this.policy.partial(state, action),
+          1 / actionProbability,
+          advantage
+        )
   }
 
-  getDiscountedReturn(rewards) {
-    const discountedRewards = rewards.map(
-      (reward, index) => Math.pow(this.getGamma(), index) * reward
-    )
-    return math.add(0, ...discountedRewards) // mathjs gets mad if you only pass one value
-  }
-
-  computeBaselines() {
-    this.history.forEach(step => (step.baseline = this.v.call(step.state)))
-  }
-
-  updateBaselines(errors) {
-    this.history.forEach(({ state }, i) => this.v.update(state, errors[i]))
+  shouldClip(importanceWeight) {
+    return Math.abs(1 - importanceWeight) >= this.epsilon
   }
 
   getGamma() {
