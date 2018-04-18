@@ -108,7 +108,7 @@ module.exports = class ProximalPolicyOptimization {
     const importanceWeight =
       this.policy.getProbability(state, action) / actionProbability
 
-    return this.shouldClip(importanceWeight)
+    return this.shouldClip(importanceWeight, advantage)
       ? 0
       : math.multiply(
           this.policy.partial(state, action),
@@ -117,8 +117,21 @@ module.exports = class ProximalPolicyOptimization {
         )
   }
 
-  shouldClip(importanceWeight) {
-    return Math.abs(1 - importanceWeight) >= this.epsilon
+  shouldClip(importanceWeight, advantage) {
+    const clippedWeight = this.clip(importanceWeight)
+    if (clippedWeight !== importanceWeight) {
+      const normal = importanceWeight * advantage
+      const clipped = clippedWeight * advantage
+      return clipped < normal
+    }
+    return false
+  }
+
+  clip(importanceWeight) {
+    return Math.min(
+      1 + this.epsilon,
+      Math.max(1 - this.epsilon, importanceWeight)
+    )
   }
 
   getGamma() {
