@@ -1,8 +1,9 @@
 module.exports = class QLearning {
-  constructor({ q, policy, lambda }) {
+  constructor({ q, policy, lambda, gamma = 1 }) {
     this.q = q
     this.policy = policy
     this.lambda = lambda
+    this.gamma = gamma
   }
 
   newEpisode(environment) {
@@ -23,15 +24,17 @@ module.exports = class QLearning {
 
   update() {
     const bestAction = this.policy.chooseBestAction(this.nextState)
-    const tdError = this.getTDError(bestAction)
-    this.traces.update({
-      state: this.state,
-      action: this.action,
-      tdError,
-      decayAmount: this.lambda * this.environment.gamma
-    })
+    this.traces.record(this.state, this.action)
+    this.traces.updateQ(this.getTDError(bestAction))
+
     if (bestAction !== this.nextAction) {
-      this.traces = this.q.createTraces() // reset
+      // Reset the eligibility trace.
+      // Otherwise, we backpropagate information about suboptimal actions.
+      // This is the difference between q-learning and sarsa,
+      // q-learning seeks to learn the q-function for the OPTIMAL policy.
+      this.traces = this.q.createTraces()
+    } else {
+      this.traces.decay(this.lambda * this.getGamma())
     }
   }
 
@@ -44,8 +47,12 @@ module.exports = class QLearning {
 
     return (
       this.environment.getReward() +
-      this.environment.gamma * nextEstimate -
+      this.getGamma() * nextEstimate -
       estimate
     )
+  }
+
+  getGamma() {
+    return this.environment.gamma * this.gamma
   }
 }

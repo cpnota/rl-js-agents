@@ -1,8 +1,9 @@
 module.exports = class Sarsa {
-  constructor({ q, policy, lambda }) {
+  constructor({ q, policy, lambda, gamma = 1 }) {
     this.q = q
     this.policy = policy
     this.lambda = lambda
+    this.gamma = gamma
   }
 
   newEpisode(environment) {
@@ -22,12 +23,9 @@ module.exports = class Sarsa {
   }
 
   update() {
-    this.traces.update({
-      state: this.state,
-      action: this.action,
-      tdError: this.getTDError(),
-      decayAmount: this.lambda * this.environment.gamma
-    })
+    this.traces.record(this.state, this.action)
+    this.traces.updateQ(this.getTDError())
+    this.traces.decay(this.lambda * this.getGamma())
   }
 
   getTDError() {
@@ -39,8 +37,12 @@ module.exports = class Sarsa {
 
     return (
       this.environment.getReward() +
-      this.environment.gamma * nextEstimate -
+      this.getGamma() * nextEstimate -
       estimate
     )
+  }
+
+  getGamma() {
+    return this.environment.gamma * this.gamma
   }
 }
