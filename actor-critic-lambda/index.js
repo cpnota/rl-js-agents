@@ -1,14 +1,14 @@
 module.exports = class ActorCritic {
-  constructor({ v, policy, lambda }) {
+  constructor({ v, policy, lambda, gamma = 1 }) {
     this.v = v
     this.policy = policy
     this.lambda = lambda
+    this.gamma = gamma
   }
 
   newEpisode(environment) {
     this.environment = environment
     this.state = environment.getState()
-    this.I = 1
     this.vTraces = this.v.createTraces()
     this.policyTraces = this.policy.createTraces()
   }
@@ -18,23 +18,19 @@ module.exports = class ActorCritic {
     this.environment.dispatch(this.action)
     this.nextState = this.environment.getState()
     this.update()
-    // this.I *= this.environment.gamma
     this.state = this.nextState
   }
 
   update() {
     const tdError = this.getTdError()
-    this.vTraces.update({
-      state: this.state,
-      tdError,
-      decayAmount: this.lambda * this.environment.gamma
-    })
-    this.policyTraces.update({
-      state: this.state,
-      action: this.action,
-      tdError,
-      decayAmount: this.lambda * this.environment.gamma
-    })
+
+    this.vTraces.record(this.state)
+    this.vTraces.updateV(tdError)
+    this.vTraces.decay(this.lambda * this.getGamma())
+
+    this.policyTraces.record(this.state)
+    this.policyTraces.updatePolicy(tdError)
+    this.policyTraces.decay(this.lambda * this.getGamma())
   }
 
   getTdError() {
@@ -42,5 +38,9 @@ module.exports = class ActorCritic {
       ? 0
       : this.environment.gamma * this.v.call(this.nextState)
     return this.environment.getReward() + nextEstimate - this.v.call(this.state)
+  }
+
+  getGamma() {
+    return this.environment.gamma * this.gamma
   }
 }

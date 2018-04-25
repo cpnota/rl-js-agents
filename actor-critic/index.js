@@ -1,13 +1,13 @@
 module.exports = class ActorCritic {
-  constructor({ v, policy }) {
+  constructor({ v, policy, gamma = 1 }) {
     this.v = v
     this.policy = policy
+    this.gamma = gamma
   }
 
   newEpisode(environment) {
     this.environment = environment
     this.state = environment.getState()
-    this.I = 1
   }
 
   act() {
@@ -15,20 +15,23 @@ module.exports = class ActorCritic {
     this.environment.dispatch(this.action)
     this.nextState = this.environment.getState()
     this.update()
-    // this.I *= this.environment.gamma
     this.state = this.nextState
   }
 
   update() {
     const tdError = this.getTdError()
-    this.v.update(this.state, this.I * tdError)
-    this.policy.update(this.state, this.action, this.I * tdError)
+    this.v.update(this.state, tdError)
+    this.policy.update(this.state, this.action, tdError)
   }
 
   getTdError() {
     const nextEstimate = this.environment.isTerminated()
       ? 0
-      : this.environment.gamma * this.v.call(this.nextState)
+      : this.getGamma() * this.v.call(this.nextState)
     return this.environment.getReward() + nextEstimate - this.v.call(this.state)
+  }
+
+  getGamma() {
+    return this.environment.gamma * this.gamma
   }
 }

@@ -1,20 +1,24 @@
 const math = require('mathjs')
+const CompatibleAdvantageEstimator = require('./advantage')
 
 /* eslint-disable camelcase */
 module.exports = class NAC_TD {
-  constructor({ policy, v, alpha_w, update_frequency, lambda }) {
+  constructor({ policy, v, alpha_w, update_frequency, lambda, gamma = 1 }) {
     this.v = v
     this.policy = policy
     this.alpha_w = alpha_w
-    this.count = 0
     this.update_frequency = update_frequency
     this.lambda = lambda
+    this.gamma = gamma
+
+    this.count = 0
+    this.compatibleAdvantageEstimator = new CompatibleAdvantageEstimator({ policy, alpha: alpha_w })
   }
 
   newEpisode(environment) {
     this.environment = environment
     this.vTraces = this.v.createTraces()
-    this.e_w = undefined // TODO remove this hack
+    this.advantageTraces = this.compatibleAdvantageEstimator.createTraces()
   }
 
   act() {
@@ -28,51 +32,32 @@ module.exports = class NAC_TD {
     this.action = this.policy.chooseAction(this.state)
     this.environment.dispatch(this.action)
     this.nextState = this.environment.getState()
-
-    if (this.e_w === undefined) {
-      // TODO this is an ugly way to initialize this
-      this.e_w = this.policy.partialLN(this.state, this.action).fill(0)
-      if (this.w === undefined) {
-        this.w = this.e_w.map(() => 0)
-      }
-    }
   }
 
   updateCritic() {
     const tdError = this.getTDError()
-    const gradient = this.policy.partialLN(this.state, this.action)
+    const estimatedAdvantage = this.compatibleAdvantageEstimator.call(this.state, this.action)
+    const advantageError = tdError - estimatedAdvantage
+    const decayFactor = this.getGamma() * this.lambda
 
-    this.e_w = math.add(
-      math.multiply(this.getGamma(), this.lambda, this.e_w),
-      gradient
-    )
+    this.advantageTraces.record(this.state, this.action)
+    this.advantageTraces.updateAdvantage(advantageError)
+    this.advantageTraces.decay(decayFactor)
 
-    const tdEstimate = math.dot(this.w, gradient)
-    const tdErrorError = tdError - tdEstimate
-
-    this.w = math.add(
-      this.w,
-      math.multiply(this.alpha_w, tdErrorError, this.e_w)
-    )
-
-    this.vTraces.update({
-      state: this.state,
-      tdError,
-      decayAmount: this.lambda * this.getGamma()
-    })
+    this.vTraces.record(this.state)
+    this.vTraces.updateV(tdError)
+    this.vTraces.decay(decayFactor)
   }
 
   updateActor() {
-    this.count = this.count + 1
+    this.count += 1
     if (this.count === this.update_frequency) {
-      const norm = math.norm(this.w)
-      this.policy.updateWeights(math.multiply(this.w, 1 / norm))
+      const weights = this.compatibleAdvantageEstimator.weights
+      const norm = math.norm(weights)
+      const normalizedWeights = math.multiply(this.weights, 1 / norm)
+      this.policy.updateWeights(normalizedWeights)
       this.count = 0
     }
-  }
-
-  getGamma() {
-    return this.environment.gamma
   }
 
   getTDError() {
@@ -82,5 +67,9 @@ module.exports = class NAC_TD {
       : this.v.call(this.nextState)
     const previousValue = this.v.call(this.state)
     return reward + this.getGamma() * nextValue - previousValue
+  }
+
+  getGamma() {
+    return this.environment.gamma * this.gamma
   }
 }
