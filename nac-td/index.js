@@ -1,9 +1,11 @@
 const math = require('mathjs')
 const CompatibleAdvantageEstimator = require('./advantage')
+const Agent = require('@rl-js/interfaces/agent')
 
 /* eslint-disable camelcase */
-module.exports = class NAC_TD {
+module.exports = class NAC_TD extends Agent {
   constructor({ policy, v, alpha_w, update_frequency, lambda, gamma = 1 }) {
+    super()
     this.v = v
     this.policy = policy
     this.alpha_w = alpha_w
@@ -12,7 +14,10 @@ module.exports = class NAC_TD {
     this.gamma = gamma
 
     this.count = 0
-    this.compatibleAdvantageEstimator = new CompatibleAdvantageEstimator({ policy, alpha: alpha_w })
+    this.compatibleAdvantageEstimator = new CompatibleAdvantageEstimator({
+      policy,
+      alpha: alpha_w
+    })
   }
 
   newEpisode(environment) {
@@ -36,7 +41,10 @@ module.exports = class NAC_TD {
 
   updateCritic() {
     const tdError = this.getTDError()
-    const estimatedAdvantage = this.compatibleAdvantageEstimator.call(this.state, this.action)
+    const estimatedAdvantage = this.compatibleAdvantageEstimator.call(
+      this.state,
+      this.action
+    )
     const advantageError = tdError - estimatedAdvantage
     const decayFactor = this.getGamma() * this.lambda
 

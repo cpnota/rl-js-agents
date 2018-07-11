@@ -1,5 +1,8 @@
-module.exports = class Sarsa {
+const Agent = require('@rl-js/interfaces/agent')
+
+module.exports = class Sarsa extends Agent {
   constructor({ q, policy }) {
+    super()
     this.q = q
     this.policy = policy
   }

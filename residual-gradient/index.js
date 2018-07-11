@@ -1,7 +1,9 @@
 const math = require('mathjs')
+const Agent = require('@rl-js/interfaces/agent')
 
-module.exports = class Sarsa {
+module.exports = class Sarsa extends Agent {
   constructor({ q, policy, gamma = 1 }) {
+    super()
     this.q = q
     this.policy = policy
     this.gamma = gamma

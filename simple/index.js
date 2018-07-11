@@ -1,5 +1,8 @@
-module.exports = class Simple {
+const Agent = require('@rl-js/interfaces/agent')
+
+module.exports = class Simple extends Agent {
   constructor({ policy }) {
+    super()
     this.policy = policy
   }
 

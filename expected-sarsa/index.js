@@ -1,7 +1,9 @@
 const math = require('mathjs')
+const Agent = require('@rl-js/interfaces/agent')
 
-module.exports = class ExpectedSarsa {
+module.exports = class ExpectedSarsa extends Agent {
   constructor({ q, policy }) {
+    super()
     this.q = q
     this.policy = policy
   }

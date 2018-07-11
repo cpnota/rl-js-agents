@@ -1,5 +1,8 @@
-module.exports = class ActorCritic {
+const Agent = require('@rl-js/interfaces/agent')
+
+module.exports = class ActorCritic extends Agent {
   constructor({ v, policy, lambda, gamma = 1 }) {
+    super()
     this.v = v
     this.policy = policy
     this.lambda = lambda

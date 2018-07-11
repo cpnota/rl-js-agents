@@ -1,7 +1,9 @@
 const math = require('mathjs')
+const Agent = require('@rl-js/interfaces/agent')
 
-module.exports = class Reinforce {
+module.exports = class Reinforce extends Agent {
   constructor({ policy, alphaBaseline }) {
+    super()
     this.policy = policy
     this.alphaBaseline = alphaBaseline
     this.baseline = 0

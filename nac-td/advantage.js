@@ -1,8 +1,9 @@
 const Traces = require('./traces')
+const math = require('mathjs')
 
 // constructs advantage estimator compatible with the given policy
 module.exports = class CompatibleAdvantageEstimator {
-  constructor ({ policy, alpha }) {
+  constructor({ policy, alpha }) {
     this.alpha = alpha
     this.policy = policy
     this.weights = 0 // lazy initialize

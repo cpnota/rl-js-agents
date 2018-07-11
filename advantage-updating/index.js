@@ -1,5 +1,8 @@
-module.exports = class Sarsa {
+const Agent = require('@rl-js/interfaces/agent')
+
+module.exports = class Sarsa extends Agent {
   constructor({ a, v, policy, omega, alpha }) {
+    super()
     this.a = a
     this.v = v
     this.policy = policy
@@ -50,7 +53,7 @@ module.exports = class Sarsa {
   normalize() {
     // TODO random state/action?
     const aMax = this.getAMax(this.state)
-    this.a.update(this.state, this.action, -this.omega / this.alpha * aMax)
+    this.a.update(this.state, this.action, (-this.omega / this.alpha) * aMax)
   }
 
   getTdError() {

@@ -1,5 +1,8 @@
-module.exports = class QLearning {
+const Agent = require('@rl-js/interfaces/agent')
+
+module.exports = class QLearning extends Agent {
   constructor({ q, policy, lambda, gamma = 1 }) {
+    super()
     this.q = q
     this.policy = policy
     this.lambda = lambda
@@ -46,9 +49,7 @@ module.exports = class QLearning {
     const estimate = this.q.call(this.state, this.action)
 
     return (
-      this.environment.getReward() +
-      this.getGamma() * nextEstimate -
-      estimate
+      this.environment.getReward() + this.getGamma() * nextEstimate - estimate
     )
   }
 

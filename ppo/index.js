@@ -1,7 +1,9 @@
 const math = require('mathjs')
+const Agent = require('@rl-js/interfaces/agent')
 
-module.exports = class ProximalPolicyOptimization {
+module.exports = class ProximalPolicyOptimization extends Agent {
   constructor({ policy, v, epsilon, batchStrategy, optimizer }) {
+    super()
     this.policy = policy
     this.v = v
     this.epsilon = epsilon

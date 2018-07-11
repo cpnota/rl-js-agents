@@ -1,7 +1,7 @@
 const math = require('mathjs')
 
 export default class AdvantageTraces {
-  constructor (advantage) {
+  constructor(advantage) {
     this.advantage = advantage
     this.traces = 0 // lazy initialize
   }
