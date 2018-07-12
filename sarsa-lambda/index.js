@@ -1,17 +1,18 @@
 const Agent = require('@rl-js/interfaces/agent')
 
 module.exports = class Sarsa extends Agent {
-  constructor({ q, policy, lambda, gamma = 1 }) {
+  constructor({ q, policy, lambda, traces, gamma = 1 }) {
     super()
     this.q = q
     this.policy = policy
     this.lambda = lambda
     this.gamma = gamma
+    this.traces = traces
   }
 
   newEpisode(environment) {
+    this.traces.reset()
     this.environment = environment
-    this.traces = this.q.createTraces()
     this.state = this.environment.getState()
     this.action = this.policy.chooseAction(this.state)
   }
@@ -26,9 +27,10 @@ module.exports = class Sarsa extends Agent {
   }
 
   update() {
-    this.traces.record(this.state, this.action)
-    this.traces.updateQ(this.getTDError())
-    this.traces.decay(this.lambda * this.getGamma())
+    this.traces
+      .record(this.state, this.action)
+      .update(this.getTDError())
+      .decay(this.lambda * this.getGamma())
   }
 
   getTDError() {

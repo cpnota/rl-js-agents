@@ -31,7 +31,7 @@ module.exports = class ActorCritic extends Agent {
     this.vTraces.updateV(tdError)
     this.vTraces.decay(this.lambda * this.getGamma())
 
-    this.policyTraces.record(this.state)
+    this.policyTraces.record(this.state, this.action)
     this.policyTraces.updatePolicy(tdError)
     this.policyTraces.decay(this.lambda * this.getGamma())
   }
