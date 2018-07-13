@@ -13,26 +13,26 @@ module.exports = class Sarsa extends Agent {
   }
 
   newEpisode(environment) {
-    this.traces.reset()
+    this.actionTraces.reset()
     this.environment = environment
-    this.state = this.environment.getState()
+    this.state = this.environment.getObservation()
     this.action = this.policy.chooseAction(this.state)
   }
 
   act() {
     this.environment.dispatch(this.action)
-    this.nextState = this.environment.getState()
+    this.nextState = this.environment.getObservation()
     this.nextAction = this.policy.chooseAction(this.nextState)
-    this.update()
+    const tdError = this.getTDError()
+    this.update(tdError)
     this.state = this.nextState
     this.action = this.nextAction
   }
 
-  update() {
-    this.traces
-      .record(this.state, this.action)
-      .update(this.getTDError())
-      .decay(this.lambda * this.getGamma())
+  update(tdError) {
+    this.actionTraces.record(this.state, this.action)
+    this.actionTraces.update(tdError)
+    this.actionTraces.decay(this.lambda * this.getGamma())
   }
 
   getTDError() {
@@ -48,6 +48,6 @@ module.exports = class Sarsa extends Agent {
   }
 
   getGamma() {
-    return this.environment.gamma * this.gamma
+    return this.gamma
   }
 }
