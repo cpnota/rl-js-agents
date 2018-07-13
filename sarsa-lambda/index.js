@@ -1,13 +1,15 @@
-const Agent = require('@rl-js/interfaces/agent')
+const { Agent, ActionValueFunction, ActionTraces, Policy, } = require('@rl-js/interfaces')
+const checkInterface = require('check-interface')
+const check = require('check-types')
 
 module.exports = class Sarsa extends Agent {
-  constructor({ q, policy, lambda, traces, gamma = 1 }) {
+  constructor({ actionValueFunction, policy, actionTraces, lambda, gamma = 1 }) {
     super()
-    this.q = q
-    this.policy = policy
-    this.lambda = lambda
-    this.gamma = gamma
-    this.traces = traces
+    this.actionValueFunction = checkInterface(actionValueFunction, ActionValueFunction)
+    this.actionTraces = checkInterface(actionTraces, ActionTraces)
+    this.policy = checkInterface(policy, Policy)
+    this.lambda = check.assert.number(lambda)
+    this.gamma = check.assert.number(gamma)
   }
 
   newEpisode(environment) {
@@ -36,9 +38,9 @@ module.exports = class Sarsa extends Agent {
   getTDError() {
     const nextEstimate = this.environment.isTerminated()
       ? 0
-      : this.q.call(this.nextState, this.nextAction)
+      : this.actionValueFunction.call(this.nextState, this.nextAction)
 
-    const estimate = this.q.call(this.state, this.action)
+    const estimate = this.actionValueFunction.call(this.state, this.action)
 
     return (
       this.environment.getReward() + this.getGamma() * nextEstimate - estimate

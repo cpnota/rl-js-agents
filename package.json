@@ -37,6 +37,8 @@
   },
   "dependencies": {
     "@rl-js/interfaces": "^1.1.0",
+    "check-interface": "^1.1.1",
+    "check-types": "^7.4.0",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "mathjs": "^5.0.2"
