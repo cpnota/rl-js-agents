@@ -87,12 +87,9 @@ const initialize = () => {
 }
 
 test('newEpisode', () => {
-  const { agent, actionTraces, policy, environment } = initialize()
-  agent.actionTraces.reset()
-  expect(agent.actionTraces).toEqual(actionTraces)
+  const { agent, actionTraces, environment } = initialize()
   agent.newEpisode(environment)
   expect(actionTraces.reset).toHaveBeenCalled()
-  expect(policy.chooseAction).toHaveBeenCalledWith('state1')
 })
 
 test('act', () => {
@@ -101,6 +98,7 @@ test('act', () => {
   agent.newEpisode(environment)
   agent.act()
 
+  expect(environment.dispatch).lastCalledWith('action1')
   expect(actionTraces.record).lastCalledWith('state1', 'action1')
   expect(actionTraces.update).lastCalledWith(11)
   expect(actionTraces.decay).lastCalledWith(lambda)
@@ -113,6 +111,7 @@ test('terminal state', () => {
   agent.act()
   agent.act()
 
+  expect(environment.dispatch).lastCalledWith('action2')
   expect(actionTraces.record).lastCalledWith('state2', 'action2')
   expect(actionTraces.update).lastCalledWith(8)
   expect(actionTraces.decay).lastCalledWith(lambda)
