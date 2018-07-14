@@ -1,7 +1,8 @@
 const {
-  Agent,
   ActionValueFunction,
   ActionTraces,
+  Agent,
+  Environment,
   Policy
 } = require('@rl-js/interfaces')
 const checkInterface = require('check-interface')
@@ -28,7 +29,7 @@ module.exports = class Sarsa extends Agent {
 
   newEpisode(environment) {
     this.actionTraces.reset()
-    this.environment = environment
+    this.environment = checkInterface(environment, Environment)
     this.state = this.environment.getObservation()
     this.action = this.policy.chooseAction(this.state)
   }
