@@ -1,11 +1,25 @@
-const { Agent, ActionValueFunction, ActionTraces, Policy, } = require('@rl-js/interfaces')
+const {
+  Agent,
+  ActionValueFunction,
+  ActionTraces,
+  Policy
+} = require('@rl-js/interfaces')
 const checkInterface = require('check-interface')
 const check = require('check-types')
 
 module.exports = class Sarsa extends Agent {
-  constructor({ actionValueFunction, policy, actionTraces, lambda, gamma = 1 }) {
+  constructor({
+    actionValueFunction,
+    policy,
+    actionTraces,
+    lambda,
+    gamma = 1
+  }) {
     super()
-    this.actionValueFunction = checkInterface(actionValueFunction, ActionValueFunction)
+    this.actionValueFunction = checkInterface(
+      actionValueFunction,
+      ActionValueFunction
+    )
     this.actionTraces = checkInterface(actionTraces, ActionTraces)
     this.policy = checkInterface(policy, Policy)
     this.lambda = check.assert.number(lambda)
