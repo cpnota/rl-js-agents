@@ -1,6 +1,6 @@
 {
   "name": "@rl-js/baseline-agents",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Reinforcement learning agents in JavaScript",
   "homepage": "https://github.com/cpnota/rl-js-agents#readme",
   "license": "MIT",
