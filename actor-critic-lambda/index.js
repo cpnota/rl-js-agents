@@ -1,9 +1,9 @@
 const {
-  ActionTraces,
   Agent,
   StateTraces,
   StateValueFunction,
-  StochasticPolicy
+  StochasticPolicy,
+  PolicyTraces
 } = require('@rl-js/interfaces')
 const checkInterface = require('check-interface')
 const check = require('check-types')
@@ -24,7 +24,7 @@ module.exports = class ActorCritic extends Agent {
     )
     this.stateTraces = checkInterface(stateTraces, StateTraces)
     this.stochasticPolicy = checkInterface(stochasticPolicy, StochasticPolicy)
-    this.policyTraces = checkInterface(policyTraces, ActionTraces)
+    this.policyTraces = checkInterface(policyTraces, PolicyTraces)
     this.lambda = check.assert.number(lambda)
     this.gamma = check.assert.number(gamma)
   }

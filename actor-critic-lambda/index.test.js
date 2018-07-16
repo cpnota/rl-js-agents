@@ -1,6 +1,6 @@
 const {
   StateValueFunction,
-  ActionTraces,
+  PolicyTraces,
   StochasticPolicy,
   Environment,
   StateTraces
@@ -15,7 +15,7 @@ describe('constructor', () => {
           stateValueFunction: new StateValueFunction(),
           stateTraces: new StateTraces(),
           stochasticPolicy: new StochasticPolicy(),
-          policyTraces: new ActionTraces(),
+          policyTraces: new PolicyTraces(),
           lambda: 0.5
         })
     ).not.toThrow()
@@ -36,7 +36,7 @@ describe('constructor', () => {
         stateValueFunction: new StateValueFunction(),
         stateTraces: new StateTraces(),
         stochasticPolicy: new StochasticPolicy(),
-        policyTraces: new ActionTraces(),
+        policyTraces: new PolicyTraces(),
         lambda: 0.5,
         gamma: 1
       }
@@ -50,7 +50,7 @@ const initialize = () => {
   const stateValueFunction = new StateValueFunction()
   const stateTraces = new StateTraces()
   const stochasticPolicy = new StochasticPolicy()
-  const policyTraces = new ActionTraces()
+  const policyTraces = new PolicyTraces()
   const lambda = 0.5
 
   const agent = new ActorCritic({
